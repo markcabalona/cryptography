@@ -1,6 +1,6 @@
 import tkinter as tk
 import numpy as np
-import decipher0 as dcp
+import cryptography as crypt
 
 def main():
     win = tk.Tk()
@@ -10,8 +10,6 @@ def main():
 
     menu = My_app(win).display_menu()
 
-    
-    
 
     win.mainloop()
 
@@ -110,7 +108,6 @@ class My_app():
     def validate_key(self,frame):
         global key
         key = list(map(int, mkey_box.get(1.0,tk.END).split()))
-        key = np.array(key)
 
         warning = ""
         if np.size(key) != dim_var.get() * dim_var.get():
@@ -118,10 +115,11 @@ class My_app():
             key = np.zeros((1,dim_var.get()*dim_var.get()))
 
         self.clear_window(self.mkey_frame)
-        matrix_key = dcp.Key_matrix(dim_var.get(), key).validate_key()
+        global matrix_key
+        matrix_key = crypt.Matrix_key(dim_var.get(),key)
 
-        if not(np.array_equal(key.flatten(),matrix_key.flatten())):
-            warning += f"Invalid Key.\n\n{matrix_key}\n\n this matrix will be used as key."
+        if not matrix_key.validate_key():
+            warning += f"Invalid Key.\n\n{matrix_key.key}\n\n this matrix will be used as key."
             warning_label = tk.Label(frame, text = warning)
             warning_label.grid(row = 0, column = 0, pady = 30)
 
@@ -173,11 +171,10 @@ class My_app():
         self.clear_window(self.message_frame)#clear the previous frame(main menu)
 
 
-        matrix_key = dcp.Key_matrix(dim_var.get(), key)
-        translator = dcp.Translator(matrix_key, message)
+        translator = crypt.Decipher(matrix_key, list(message),mode)
         
         #this decides which method to use(encode or decode)
-        result = translator.encode() if mode.lower() == "encode" else translator.decode()
+        result = translator.convert()
 
         my_label = tk.Label(frame, text = f"Success\n\n{result}")
         my_label.grid(row = 0, column = 0, pady = 20)
